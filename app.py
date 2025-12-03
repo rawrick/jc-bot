@@ -36,7 +36,7 @@ async def play_sound(vc, name):
         path = os.path.join(SOUND_DIR, f"{name}.{ext}")
         if os.path.exists(path):
             vc.stop()
-            vc.play(discord.FFmpegPCMAudio(path, executable="bin/ffmpeg.exe"))
+            vc.play(discord.FFmpegPCMAudio(path, executable="bin/ffmpeg"))
             return True
     return False
 
