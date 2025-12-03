@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ensure the script has execute permissions
+chmod +x "$0"
+
 BOT_DIR="/home/pi/jc-bot"
 VENV_DIR="$BOT_DIR/botenv" 
 REQ_FILE="$BOT_DIR/requirements.txt"
