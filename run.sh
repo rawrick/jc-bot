@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BOT_DIR="/home/pi/soundboard"
+BOT_DIR="/home/pi/jc-bot"
 VENV_DIR="$BOT_DIR/botenv" 
 REQ_FILE="$BOT_DIR/requirements.txt"
 BOT_SCRIPT="$BOT_DIR/app.py"
