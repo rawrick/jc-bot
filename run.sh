@@ -5,6 +5,8 @@ VENV_DIR="$BOT_DIR/botenv"
 REQ_FILE="$BOT_DIR/requirements.txt"
 BOT_SCRIPT="$BOT_DIR/app.py"
 
+cd "$BOT_DIR" || exit
+
 # Create virtual environment if it doesn't exist
 if [ ! -d "$VENV_DIR" ]; then
     echo "[INFO] Creating Python virtual environment..."
