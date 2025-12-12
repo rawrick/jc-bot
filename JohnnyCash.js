@@ -12,6 +12,8 @@ const {
 	createAudioPlayer,
 	createAudioResource,
 	AudioPlayerStatus,
+	VoiceConnectionStatus,
+	entersState
 } = require("@discordjs/voice");
 
 // Config Environment Variables
@@ -47,7 +49,27 @@ async function joinVoice(channel) {
 	});
 
 	connection.subscribe(player);
-}
+
+	// Handle connection errors
+	connection.on("error", (err) => {
+		console.error("Voice connection error:", err.message);
+	});
+
+	// Auto-reconnect logic
+	connection.on(VoiceConnectionStatus.Disconnected, async () => {
+		try {
+			await Promise.race([
+				entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+				entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+			]);
+			console.log("Voice reconnected");
+		} catch {
+			console.log("Voice connection lost, destroying");
+			connection.destroy();
+			connection = null;
+		}
+	});
+};
 
 // Play sound file
 function playSound(filename) {
@@ -67,7 +89,7 @@ function playSound(filename) {
 	const resource = createAudioResource(fullPath);
 	player.play(resource);
 	console.log("Playing:", filename);
-}
+};
 
 // Function to play a random sound
 function playRandomSound() {
@@ -78,7 +100,15 @@ function playRandomSound() {
 	const randomFile = files[Math.floor(Math.random() * files.length)];
 	console.log("Selected random sound file:", randomFile);;
 	playSound(randomFile);
-}
+};
+
+process.on("uncaughtException", (err) => {
+    console.error("Uncaught exception:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled promise rejection:", reason);
+});
 
 // Ready startup message
 client.once(Events.ClientReady, () => {
@@ -92,7 +122,7 @@ child.on("message", (msg) => {
 		console.log("Requesting random sound from child process");
 		playRandomSound();
 	}
-})
+});
 
 // Entrance and Leave sounds
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
@@ -152,6 +182,6 @@ client.on(Events.MessageCreate, async (message) => {
 	else {
 		playSound(command);
 	}
-})
+});
 
 client.login(token);
