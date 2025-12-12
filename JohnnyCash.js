@@ -55,15 +55,26 @@ function playSound(filename) {
     player.play(resource);
 }
 
+// Function to play a random sound
+function playRandomSound() {
+    const files = fs.readdirSync(sound_dir).filter(f => f.endsWith(".mp3"));
+    if (files.length === 0) return;
+    const randomFile = files[Math.floor(Math.random() * files.length)];
+    playSound(randomFile);
+}
+
 client.once('clientReady', () => {
 	console.log('Hello there!');
 	console.log(`Logged in as ${client.user.tag}`);
 });
 
 //child listener
-child.on(Events.MessageCreate, (msg) => {
-    const channel = client.channels.cache.get(app_id);
-    if (channel) channel.send(prefix + "random");
+child.on("message", (msg) => {
+
+    if (msg === 'randomSound') {
+		console.log('Playing random sound from child process');
+		playRandomSound();
+	}
 })
 
 //Entrance und Leavesounds
