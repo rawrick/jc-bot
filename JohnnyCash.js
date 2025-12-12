@@ -106,15 +106,15 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 	// User joins a channel
 	if (oldChannel !== newChannel && newChannel !== null) {
 		await joinVoice(newChannel);
+		console.log("Joining User:", user.id);
 		playSound(user.username); // SAFER: use ID
-		console.log(`User ${user.id} joining. Playing ${user.username}.mp3`);
 	}
 
 	// User leaves a channel
 	if (newChannel === null) {
 		await joinVoice(oldChannel);
+		console.log("User left:", user.id);
 		playSound(user_leave);
-		console.log(`User ${user.id} leaving. Playing ${user_leave}.mp3`);
 	}
 });
 
