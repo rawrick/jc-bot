@@ -1,11 +1,12 @@
 require("dotenv").config();
+const fs = require('fs');
+
+// Child process for random sound playing
+const { fork } = require("child_process");
+const child = fork("./randomStartStop.js");
+
+// Discord.js imports
 const { Client, GatewayIntentBits, Events } = require("discord.js");
-const client = new Client({intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildVoiceStates,
-    GatewayIntentBits.MessageContent
-  ]});
 const {
     joinVoiceChannel,
     createAudioPlayer,
@@ -13,22 +14,25 @@ const {
     AudioPlayerStatus,
 } = require("@discordjs/voice");
 
+// Config Environment Variables
+const token = process.env.TOKEN;
+const sound_dir = process.env.SOUND_DIR;
+const prefix = process.env.PREFIX;
+const audio_format = process.env.AUDIO_FORMAT || "mp3";
+const user_leave = process.env.USER_LEAVE || "rave";
+
+// Create Discord Client
+const client = new Client({intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent
+  ]});
+
+  // Voice player
 let connection = null;
-let player = createAudioPlayer();
-
-// Auto-resubscribe connection after idle
-player.on(AudioPlayerStatus.Idle, () => {});
-
-//randomStartStop
-const cp = require('child_process');
-var child = cp.fork('./randomStartStop.js');
-
-var token = process.env.TOKEN;
-var app_id = process.env.APP_ID;
-var sound_dir = process.env.SOUND_DIR;
-var prefix = process.env.PREFIX;
-var befehl = '';
-var fs = require('fs');
+const player = createAudioPlayer();
+player.on(AudioPlayerStatus.Idle, () => {}); // Auto-resubscribe connection after idle
 
 // Join voice
 async function joinVoice(channel) {
@@ -43,110 +47,112 @@ async function joinVoice(channel) {
     connection.subscribe(player);
 }
 
-// Play an MP3 file
+// Play sound file
 function playSound(filename) {
-    const fullPath = sound_dir + filename;
+	// Construct full path
+    let fullPath = sound_dir + filename;
+	if (!filename.endsWith("." + audio_format)) {
+		fullPath  += "." + audio_format;
+	}
+	
+	// Check if file exists
     if (!fs.existsSync(fullPath)) {
         console.log("Missing sound:", fullPath);
         return;
     }
 
+	// Create and play resource
     const resource = createAudioResource(fullPath);
     player.play(resource);
+	console.log("Playing:", filename + "." + audio_format);
 }
 
 // Function to play a random sound
 function playRandomSound() {
-    const files = fs.readdirSync(sound_dir).filter(f => f.endsWith(".mp3"));
+	// List all sound files
+    const files = fs.readdirSync(sound_dir).filter(f => f.endsWith(audio_format));
     if (files.length === 0) return;
+	// Select a random file
     const randomFile = files[Math.floor(Math.random() * files.length)];
     playSound(randomFile);
+	console.log("Playing random sound");
 }
 
-client.once('clientReady', () => {
-	console.log('Hello there!');
+// Ready startup message
+client.once(Events.ClientReady, () => {
 	console.log(`Logged in as ${client.user.tag}`);
+	console.log('Hello there!');
 });
 
-//child listener
+// Listen for messages from child process
 child.on("message", (msg) => {
-
     if (msg === 'randomSound') {
-		console.log('Playing random sound from child process');
 		playRandomSound();
+		console.log("Playing random sound (child process)");
 	}
 })
 
-//Entrance und Leavesounds
-client.on('voiceStateUpdate', async (oldState, newState) => {
+// Entrance and Leave sounds
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   let oldChannel = oldState.channel
   let newChannel  = newState.channel
   const user = newState.member.user;
 
-	//er selbst zählt nicht
+	// Ignore self
 	if (user.id === client.user.id) return;
 
-	//Jemand ist dem Voicechat beigetreten
+	// User joins a channel
 	if(oldChannel  !== newChannel  && newChannel  !== null){
-		console.log('play '+user.username+'.mp3');
-
-		//beitritt zum Voicechat, falls nicht schon drinnen
 		await joinVoice(newChannel);
-		//sound
-		playSound(user.username + ".mp3"); // SAFER: use ID
-
+		playSound(user.username); // SAFER: use ID
+		console.log(`User ${user.id} joining. Playing ${user.username}.mp3`);
 	}
 
+	// User leaves a channel
 	if(newChannel  === null){
 		await joinVoice(oldChannel);
-		playSound("rave.mp3");
-
+		playSound(user_leave);
+		console.log(`User ${user.id} leaving. Playing ${user_leave}.mp3`);
 	}
 
 
 	});
 
 
-//Listen for messages
+// Prefix Commands
 client.on(Events.MessageCreate, async (message) => {
-
 	// Ignore bot messages
 	if (message.author.bot) return;
+	// Ignore messages without prefix
+	if (!message.content.startsWith(prefix)) return;
 
 	const text = message.content;
-	console.log('Received message:', text);
+	const command = text.substring(prefix.length);
 
-	//join dem Verfasser des Befehls
+	// Join VC of message author
 	if (message.member.voice.channel) {
 		await joinVoice(message.member.voice.channel);
 	}
 
-	//RandomSounds
-	if(text === prefix+'random'){
-		//play random sounds
-		const files = fs.readdirSync(sound_dir);
-		const randomFile  = files[Math.floor(Math.random() * files.length)];
-		console.log(randomSound);
-		playSound(randomFile);
+	// Random Sound Command
+	if(command === "random"){
+		playRandomSound();
 	}
 
-	//random Start
-	else if(text === prefix+'rStart'){
-		child.send('start');
+	// Start random Playback
+	else if(text === "rStart"){
+		child.send("start");
 	}
 
-	//random Start
-	else if(text === prefix+'rStop'){
-		child.send('stop');
+	// Stop random Playback
+	else if(command === "rStop"){
+		child.send("stop");
 	}
 
-
-	//Normale Soundbefehle
-  else if(text.startsWith(prefix)){
-    //Titel audio
-    const soundFileName = text.substring(prefix.length);
-    //Verzeichnis nach Titel durchsuchen
-		playSound(soundFileName+'.mp3');
+	// Play matching sound file
+    else {
+       
+    playSound(command);
 
   }
 })
