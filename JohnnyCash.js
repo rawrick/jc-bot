@@ -1,17 +1,28 @@
 require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
-const client = new Client({autoReconnect:true, intents: [
+const client = new Client({intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.MessageContent
   ]});
+const {
+    joinVoiceChannel,
+    createAudioPlayer,
+    createAudioResource,
+    AudioPlayerStatus,
+} = require("@discordjs/voice");
+
+let connection = null;
+let player = createAudioPlayer();
+
+// Auto-resubscribe connection after idle
+player.on(AudioPlayerStatus.Idle, () => {});
 
 //randomStartStop
 const cp = require('child_process');
 var child = cp.fork('./randomStartStop.js');
 
-var connection = undefined;
 var token = process.env.TOKEN;
 var app_id = process.env.APP_ID;
 var sound_dir = process.env.SOUND_DIR;
@@ -23,7 +34,6 @@ var fs = require('fs');
 client.once('clientReady', () => {
 	console.log('Hello there!');
 });
-
 
 //child listener
 child.on('message', (data) => {
