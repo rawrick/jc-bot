@@ -1,23 +1,32 @@
 let active = false;
+let timer = null;
 
-function loop() {
+// Loop that sends "randomSound" at random intervals
+function scheduleNext() {
     if (!active) return;
 
-    process.send("randomSound");
-
-    const delay = 1000 * random(5, 300);
-    setTimeout(loop, delay);
+    const delay = randomMs(5000, 300000);
+    timer = setTimeout(() => {
+        if (!active) return;
+        process.send("randomSound");
+        scheduleNext();
+    }, delay);
 }
 
-function random(low, high) {
-  return Math.random() * (high - low) + low;
+// Returns a random number of milliseconds between min and max
+function randomMs(min, max) {
+    return Math.floor(Math.random() * (max - min) + min);
 }
 
 process.on("message", (msg) => {
     if (msg === "start") {
-        active = true;
-        loop();
+        if (!active) {
+            active = true;
+            scheduleNext();
+        }
     } else if (msg === "stop") {
         active = false;
+        if (timer) clearTimeout(timer);
+        timer = null;
     }
 });
