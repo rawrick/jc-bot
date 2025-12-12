@@ -30,6 +30,30 @@ var prefix = process.env.PREFIX;
 var befehl = '';
 var fs = require('fs');
 
+// Join voice
+async function joinVoice(channel) {
+    if (!channel) return;
+
+    connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: channel.guild.id,
+        adapterCreator: channel.guild.voiceAdapterCreator
+    });
+
+    connection.subscribe(player);
+}
+
+// Play an MP3 file
+function playSound(filename) {
+    const fullPath = sound_dir + filename;
+    if (!fs.existsSync(fullPath)) {
+        console.log("Missing sound:", fullPath);
+        return;
+    }
+
+    const resource = createAudioResource(fullPath);
+    player.play(resource);
+}
 
 client.once('clientReady', () => {
 	console.log('Hello there!');
