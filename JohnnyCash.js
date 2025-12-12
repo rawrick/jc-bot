@@ -61,8 +61,9 @@ client.once('clientReady', () => {
 });
 
 //child listener
-child.on('message', (data) => {
-	client.channels.cache.get(app_id).send('?random');
+child.on(Events.MessageCreate, (msg) => {
+    const channel = client.channels.cache.get(app_id);
+    if (channel) channel.send(prefix + "random");
 })
 
 //Entrance und Leavesounds
