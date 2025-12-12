@@ -51,22 +51,22 @@ async function joinVoice(channel) {
 
 // Play sound file
 function playSound(filename) {
+	if (!filename.endsWith("." + audio_format)) {
+		filename += "." + audio_format;
+	}
 	// Construct full path
 	let fullPath = sound_dir + filename;
-	if (!filename.endsWith("." + audio_format)) {
-		fullPath += "." + audio_format;
-	}
 
 	// Check if file exists
 	if (!fs.existsSync(fullPath)) {
-		console.log("Missing sound:", fullPath);
+		console.log("File does not exist:", filename);
 		return;
 	}
 
 	// Create and play resource
 	const resource = createAudioResource(fullPath);
 	player.play(resource);
-	console.log("Playing:", filename + "." + audio_format);
+	console.log("Playing:", filename);
 }
 
 // Function to play a random sound
@@ -76,21 +76,21 @@ function playRandomSound() {
 	if (files.length === 0) return;
 	// Select a random file
 	const randomFile = files[Math.floor(Math.random() * files.length)];
+	console.log("Selected random sound file:", randomFile);;
 	playSound(randomFile);
-	console.log("Playing random sound");
 }
 
 // Ready startup message
 client.once(Events.ClientReady, () => {
-	console.log(`Logged in as ${client.user.tag}`);
-	console.log('Hello there!');
+	console.log("Logged in as:", client.user.tag);
+	console.log("Hello there!");
 });
 
 // Listen for messages from child process
 child.on("message", (msg) => {
-	if (msg === 'randomSound') {
+	if (msg === "randomSound") {
+		console.log("Requesting random sound from child process");
 		playRandomSound();
-		console.log("Playing random sound (child process)");
 	}
 })
 
@@ -139,7 +139,7 @@ client.on(Events.MessageCreate, async (message) => {
 	}
 
 	// Start random Playback
-	else if (text === "rStart") {
+	else if (command === "rStart") {
 		child.send("start");
 	}
 
