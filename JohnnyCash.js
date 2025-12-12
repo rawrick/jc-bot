@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 const client = new Client({intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
@@ -96,39 +96,45 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 
 //Listen for messages
-client.on('message', async message => {
+client.on(Events.MessageCreate, async (message) => {
+
+	// Ignore bot messages
+	if (message.author.bot) return;
+
+	const text = message.content;
+	console.log('Received message:', text);
 
 	//join dem Verfasser des Befehls
 	if (message.member.voice.channel) {
-		connection = await message.member.voice.channel.join();
+		await joinVoice(message.member.voice.channel);
 	}
 
 	//RandomSounds
-	if(message.content === prefix+'random'){
+	if(text === prefix+'random'){
 		//play random sounds
-		let files = fs.readdirSync(sound_dir);
-		let randomSound = files[Math.floor(Math.random() * files.length)];
+		const files = fs.readdirSync(sound_dir);
+		const randomFile  = files[Math.floor(Math.random() * files.length)];
 		console.log(randomSound);
-		const dispatcher = connection.play(sound_dir+randomSound);
+		playSound(randomFile);
 	}
 
 	//random Start
-	else if(message.content === prefix+'rStart'){
+	else if(text === prefix+'rStart'){
 		child.send('start');
 	}
 
 	//random Start
-	else if(message.content === prefix+'rStop'){
+	else if(text === prefix+'rStop'){
 		child.send('stop');
 	}
 
 
 	//Normale Soundbefehle
-  else if(message.content.startsWith(prefix)){
+  else if(text.startsWith(prefix)){
     //Titel audio
-    befehl = message.content.substring(1);
+    const soundFileName = text.substring(prefix.length);
     //Verzeichnis nach Titel durchsuchen
-		const dispatcher = connection.play(sound_dir+befehl+'.mp3');
+		playSound(soundFileName+'.mp3');
 
   }
 })
