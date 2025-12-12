@@ -1,22 +1,19 @@
-var repeat = false;
+let repeat = false;
 
-const cp = require('child_process');
-var child = cp.fork('./hilfe.js');
+const child = require("child_process").fork("./hilfe.js");
 
-
-process.on('message', message => {
-  if(message === 'start'){
+process.on("message", (msg) => {
+  if (msg === "start") {
     repeat = true;
-    console.log(message);
-    child.send(message);
-  }
-  else{
+    child.send("start");
+  } else {
     repeat = false;
+    child.send("stop");
   }
 });
 
-child.on('message', message =>{
-  if(repeat === true){
-    process.send(message);
-  };
-})
+child.on("message", (msg) => {
+  if (repeat) {
+    process.send(msg);
+  }
+});
