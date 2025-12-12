@@ -20,7 +20,7 @@ var befehl = '';
 var fs = require('fs');
 
 
-client.once('ready', () => {
+client.once('clientReady', () => {
 	console.log('Hello there!');
 });
 
