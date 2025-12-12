@@ -57,6 +57,7 @@ function playSound(filename) {
 
 client.once('clientReady', () => {
 	console.log('Hello there!');
+	console.log(`Logged in as ${client.user.tag}`);
 });
 
 //child listener
@@ -65,29 +66,28 @@ child.on('message', (data) => {
 })
 
 //Entrance und Leavesounds
-client.on('voiceStateUpdate', async (oldMemeber, newMember) => {
-  let newUserChannel = newMember.channel
-  let oldUserChannel = oldMemeber.channel
+client.on('voiceStateUpdate', async (oldState, newState) => {
+  let oldChannel = oldState.channel
+  let newChannel  = newState.channel
+  const user = newState.member.user;
 
 	//er selbst zählt nicht
-	if(newMember.member.user.username === 'Johnny Cash the 3rd'){
-		return;
-	}
+	if (user.id === client.user.id) return;
 
 	//Jemand ist dem Voicechat beigetreten
-	if(oldUserChannel !== newUserChannel && newUserChannel !== null){
-		console.log('play '+newMember.member.user.username+'.mp3');
+	if(oldChannel  !== newChannel  && newChannel  !== null){
+		console.log('play '+user.username+'.mp3');
 
 		//beitritt zum Voicechat, falls nicht schon drinnen
-		connection = await newUserChannel.join();
+		await joinVoice(newChannel);
 		//sound
-		const dispatcher = connection.play(sound_dir+newMember.member.user.username+'.mp3');
+		playSound(user.username + ".mp3"); // SAFER: use ID
 
 	}
 
-	if(newUserChannel === null){
-		connection = await oldUserChannel.join();
-		const dispatcher = connection.play(sound_dir+'rave.mp3');
+	if(newChannel  === null){
+		await joinVoice(oldChannel);
+		playSound("rave.mp3");
 
 	}
 
