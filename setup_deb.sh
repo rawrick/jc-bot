@@ -79,7 +79,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=$PROJECT_DIR
-ExecStart=/usr/bin/node $PROJECT_DIR/index.js
+ExecStart=/usr/bin/node $PROJECT_DIR/JohnnyCash.js
 Restart=always
 Environment=NODE_ENV=production
 EnvironmentFile=$PROJECT_DIR/.env
