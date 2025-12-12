@@ -1,5 +1,11 @@
-const Discord = require('discord.js');
-const client = new Discord.Client({autoReconnect:true});
+require("dotenv").config();
+const { Client, GatewayIntentBits } = require("discord.js");
+const client = new Client({autoReconnect:true, intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent
+  ]});
 
 //randomStartStop
 const cp = require('child_process');
