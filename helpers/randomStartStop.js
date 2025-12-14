@@ -1,6 +1,6 @@
 let repeat = false;
 
-const child = require("child_process").fork("./hilfe.js");
+const child = require("child_process").fork("./helpers/hilfe.js");
 
 process.on("message", (msg) => {
   if (msg === "start") {

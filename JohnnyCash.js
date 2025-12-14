@@ -3,7 +3,7 @@ const fs = require('fs');
 
 // Child process for random sound playing
 const { fork } = require("child_process");
-const child = fork("./randomStartStop.js");
+const child = fork("./helpers/randomStartStop.js");
 
 // Discord.js imports
 const { Client, GatewayIntentBits, Events } = require("discord.js");
