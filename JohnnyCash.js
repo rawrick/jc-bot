@@ -19,6 +19,7 @@ const {
 // Config Environment Variables
 const token = process.env.TOKEN;
 const sound_dir = process.env.SOUND_DIR;
+const sound_join_dir = process.env.SOUND_JOIN_DIR || "join/";
 const prefix = process.env.PREFIX;
 const audio_format = process.env.AUDIO_FORMAT || "mp3";
 const user_leave = process.env.USER_LEAVE || "rave";
@@ -72,12 +73,16 @@ async function joinVoice(channel) {
 };
 
 // Play sound file
-function playSound(filename) {
+function playSound(filename, join) {
 	if (!filename.endsWith("." + audio_format)) {
 		filename += "." + audio_format;
 	}
 	// Construct full path
-	let fullPath = sound_dir + filename;
+	let fullPath = sound_dir;
+	if (join) {
+		fullPath += sound_join_dir;
+	}
+	fullPath += filename;
 
 	// Check if file exists
 	if (!fs.existsSync(fullPath)) {
@@ -103,11 +108,11 @@ function playRandomSound() {
 };
 
 process.on("uncaughtException", (err) => {
-    console.error("Uncaught exception:", err);
+	console.error("Uncaught exception:", err);
 });
 
 process.on("unhandledRejection", (reason) => {
-    console.error("Unhandled promise rejection:", reason);
+	console.error("Unhandled promise rejection:", reason);
 });
 
 // Ready startup message
@@ -136,14 +141,14 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 	// User joins a channel
 	if (oldChannel !== newChannel && newChannel !== null) {
 		await joinVoice(newChannel);
-		console.log("Joining User:", user.id);
-		playSound(user.username); // SAFER: use ID
+		console.log("Joining User:", user.username, user.id);
+		playSound(user.id, true);
 	}
 
 	// User leaves a channel
 	if (newChannel === null) {
 		await joinVoice(oldChannel);
-		console.log("User left:", user.id);
+		console.log("User left:", user.username, user.id);
 		playSound(user_leave);
 	}
 });
@@ -180,7 +185,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 	// Play matching sound file
 	else {
-		playSound(command);
+		playSound(command, false);
 	}
 });
 
