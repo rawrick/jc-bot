@@ -2,8 +2,8 @@ require("dotenv").config();
 const fs = require('fs');
 
 // 
-const { getEntranceSound } = require("./helpers/entranceLoader");
-const { getIDs } = require("./helpers/IDLog");
+const { getEntranceSound, handleEntranceCommand } = require("./helpers/entranceManager");
+const { getServerMembers, getServerInfo } = require("./helpers/infoManager");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
@@ -165,7 +165,7 @@ client.on(Events.MessageCreate, async (message) => {
 	if (!message.content.startsWith(prefix)) return;
 
 	const text = message.content;
-	const command = text.substring(prefix.length);
+	const command = text.slice(prefix.length).trim().split(/\s+/).shift().toLowerCase();
 
 	// Join VC of message author
 	if (message.member.voice.channel) {
@@ -177,19 +177,26 @@ client.on(Events.MessageCreate, async (message) => {
 		default:
 			playSound(command);
 			break;
-		case "getIDs":
-			getIDs(message);
+		case "members":
+			getServerMembers(message);
+			break;
+		case "serverinfo":
+			getServerInfo(message);
+			break;
+		// Entrance Command
+		case "entrance":
+			await handleEntranceCommand(message);
 			break;
 		// Random Sound Command
 		case "random":
 			playRandomSound();
 			break;
 		// Start random Playback
-		case "rStart":
+		case "rstart":
 			child.send("start");
 			break;
 		// Stop random Playback
-		case "rStop":
+		case "rstop":
 			child.send("stop");
 			break;
 	}

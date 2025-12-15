@@ -34,9 +34,9 @@ async function getGuildMembersCached(guild, progressFn = null) {
 }
 
 /**
- * Handle ?getIDs command
+ * Handle ?members command
  */
-async function getIDs(message) {
+async function getServerMembers(message) {
     const guild = message.guild;
     if (!guild) return;
 
@@ -88,9 +88,17 @@ async function getIDs(message) {
         await message.channel.send("```" + chunk + "```");
     }
 
-    await statusMsg.edit("✅ Done.");
+    await statusMsg.edit("✅ Done.", guild.id);
+}
+
+async function getServerInfo(message) {
+    const guild = message.guild;
+    // todo: bot count
+    await message.channel.send(`Server Name: ${guild.name}\nTotal Members: ${guild.memberCount}\nServer ID: ${guild.id}`);
+    
 }
 
 module.exports = {
-    getIDs
+    getServerMembers,
+    getServerInfo
 };
