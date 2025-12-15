@@ -43,6 +43,7 @@ function getEntranceSound(guildId, userId, options = {}) {
 
     const entry = map[userId];
     if (!entry || !Array.isArray(entry.sounds) || entry.sounds.length === 0) {
+        console.log(`User with ID ${userId} not found.`)
         return defaultSound;
     }
 

@@ -24,6 +24,7 @@ const token = process.env.TOKEN;
 const sound_dir = process.env.SOUND_DIR;
 const prefix = process.env.PREFIX;
 const audio_format = process.env.AUDIO_FORMAT || "mp3";
+const user_join_default = process.env.USER_JOIN_DEFAULT || "sus3";
 const user_leave = process.env.USER_LEAVE || "rave";
 
 // Create Discord Client
@@ -140,7 +141,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 
 	// User joins a channel
 	if (oldChannel !== newChannel && newChannel !== null) {
-		const sound = getEntranceSound(guild.id, user.id, {})
+		const sound = getEntranceSound(guild.id, user.id, { defaultSound: user_join_default })
 		await joinVoice(newChannel);
 		console.log("Joining User:", user.username, user.id);
 		playSound(sound);
