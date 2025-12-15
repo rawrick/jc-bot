@@ -1,6 +1,9 @@
 require("dotenv").config();
 const fs = require('fs');
 
+// 
+const { gerEntranceSound } = require("./helpers/entranceLoader");
+
 // Child process for random sound playing
 const { fork } = require("child_process");
 const child = fork("./helpers/randomStartStop.js");
@@ -19,7 +22,6 @@ const {
 // Config Environment Variables
 const token = process.env.TOKEN;
 const sound_dir = process.env.SOUND_DIR;
-const sound_join_dir = process.env.SOUND_JOIN_DIR || "join/";
 const prefix = process.env.PREFIX;
 const audio_format = process.env.AUDIO_FORMAT || "mp3";
 const user_leave = process.env.USER_LEAVE || "rave";
@@ -73,15 +75,12 @@ async function joinVoice(channel) {
 };
 
 // Play sound file
-function playSound(filename, join) {
+function playSound(filename) {
 	if (!filename.endsWith("." + audio_format)) {
 		filename += "." + audio_format;
 	}
 	// Construct full path
 	let fullPath = sound_dir;
-	if (join) {
-		fullPath += sound_join_dir;
-	}
 	fullPath += filename;
 
 	// Check if file exists
@@ -134,6 +133,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 	let oldChannel = oldState.channel
 	let newChannel = newState.channel
 	const user = newState.member.user;
+	const guild = newState.guild;
 
 	// Ignore self
 	if (user.id === client.user.id) return;
@@ -142,7 +142,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 	if (oldChannel !== newChannel && newChannel !== null) {
 		await joinVoice(newChannel);
 		console.log("Joining User:", user.username, user.id);
-		playSound(user.id, true);
+		playSound(user.id);
 	}
 
 	// User leaves a channel
@@ -185,7 +185,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 	// Play matching sound file
 	else {
-		playSound(command, false);
+		playSound(command);
 	}
 });
 
