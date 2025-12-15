@@ -1,6 +1,7 @@
 /soundboard
 /.aux
 /bin
+/config
 
 # Logs
 logs
