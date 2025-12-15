@@ -7,7 +7,7 @@ const CACHE = new Map();
 const MAP_DIR = "./config/entranceMaps";
 
 
-function getGuildMapPath(guildId, baseDir = "./config/entranceMaps") {
+function getGuildMapPath(guildId, baseDir = MAP_DIR) {
     if (!fs.existsSync(baseDir)) {
         fs.mkdirSync(baseDir, { recursive: true });
     }
@@ -116,6 +116,7 @@ async function handleEntranceCommand(message, options = {}) {
     if (action === "clear") {
         map[userId].sounds = [];
         saveGuildMap(guildId, map, mapsDir);
+        reloadGuildMap(guildId, mapsDir);
         await message.reply(`✅ Cleared entrance sounds for **${user.username}**`);
         return;
     }
@@ -145,6 +146,7 @@ async function handleEntranceCommand(message, options = {}) {
 
         sounds.push(soundFile);
         saveGuildMap(guildId, map, mapsDir);
+        reloadGuildMap(guildId, mapsDir);
 
         await message.reply(
             `✅ Added entrance sound \`${soundFile}\` to **${user.username}**`
@@ -162,6 +164,7 @@ async function handleEntranceCommand(message, options = {}) {
 
         sounds.splice(index, 1);
         saveGuildMap(guildId, map, mapsDir);
+        reloadGuildMap(guildId, mapsDir);
 
         await message.reply(
             `✅ Removed entrance sound \`${soundFile}\` from **${user.username}**`
