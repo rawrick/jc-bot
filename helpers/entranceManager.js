@@ -90,14 +90,22 @@ async function handleEntranceCommand(message, options = {}) {
     } = options;
 
     const parts = message.content.trim().split(/\s+/);
-    if (parts.length < 3) return;
+    if (parts.length < 3) {
+        await message.reply("❌ Please mention a user or provide a user ID.");
+        return;
+    }
 
     const action = parts[1];
-    const user = message.mentions.users.first();
+    let user = message.mentions.users.first();
 
     if (!user) {
-        await message.reply("❌ Please mention a user.");
-        return;
+        // try to parse as ID
+        try {
+            user = await message.guild.members.fetch(parts[2]).then(m => m.user);
+        } catch {
+            await message.reply("❌ Could not find user.");
+            return;
+        }
     }
 
     const guildId = message.guild.id;
@@ -110,6 +118,20 @@ async function handleEntranceCommand(message, options = {}) {
             username: user.username,
             sounds: []
         };
+    }
+
+    // ?entrance list @user
+    if (action === "list") {
+        const entry = map[user.id];
+        if (!entry || !entry.sounds || entry.sounds.length === 0) {
+            await message.reply(`⚠️ No entrance sounds assigned for **${user.username}**.`);
+            return;
+        }
+        const soundsList = entry.sounds.join("\n");
+        await message.reply(
+            `🎵 Entrance sounds for **${user.username}**:\n\`\`\`\n${soundsList}\n\`\`\``
+        );
+        return;
     }
 
     // ?entrance clear @user
