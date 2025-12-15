@@ -3,6 +3,7 @@ const fs = require('fs');
 
 // 
 const { getEntranceSound } = require("./helpers/entranceLoader");
+const {printJoinSoundTable} = require("./helpers/IDLogs");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
@@ -168,6 +169,12 @@ client.on(Events.MessageCreate, async (message) => {
 	// Join VC of message author
 	if (message.member.voice.channel) {
 		await joinVoice(message.member.voice.channel);
+	}
+
+	//
+	if (command === "getID") {
+		console.log()
+		printJoinSoundTable();
 	}
 
 	// Random Sound Command
