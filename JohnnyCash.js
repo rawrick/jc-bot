@@ -3,7 +3,7 @@ const fs = require('fs');
 
 // 
 const { getEntranceSound } = require("./helpers/entranceLoader");
-const { printJoinSoundTable } = require("./helpers/IDLog");
+const { getIDs } = require("./helpers/IDLog");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
@@ -34,7 +34,8 @@ const client = new Client({
 		GatewayIntentBits.Guilds,
 		GatewayIntentBits.GuildMessages,
 		GatewayIntentBits.GuildVoiceStates,
-		GatewayIntentBits.MessageContent
+		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildMembers
 	]
 });
 
@@ -171,30 +172,26 @@ client.on(Events.MessageCreate, async (message) => {
 		await joinVoice(message.member.voice.channel);
 	}
 
-	//
-	if (command === "getID") {
-		console.log()
-		printJoinSoundTable();
-	}
-
-	// Random Sound Command
-	if (command === "random") {
-		playRandomSound();
-	}
-
-	// Start random Playback
-	else if (command === "rStart") {
-		child.send("start");
-	}
-
-	// Stop random Playback
-	else if (command === "rStop") {
-		child.send("stop");
-	}
-
-	// Play matching sound file
-	else {
-		playSound(command);
+	switch (command) {
+		// Play matching sound file
+		default:
+			playSound(command);
+			break;
+		case "getIDs":
+			getIDs(message);
+			break;
+		// Random Sound Command
+		case "random":
+			playRandomSound();
+			break;
+		// Start random Playback
+		case "rStart":
+			child.send("start");
+			break;
+		// Stop random Playback
+		case "rStop":
+			child.send("stop");
+			break;
 	}
 });
 
