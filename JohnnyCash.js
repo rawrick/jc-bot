@@ -2,7 +2,7 @@ require("dotenv").config();
 const fs = require('fs');
 
 // 
-const { gerEntranceSound } = require("./helpers/entranceLoader");
+const { getEntranceSound } = require("./helpers/entranceLoader");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
@@ -140,9 +140,10 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 
 	// User joins a channel
 	if (oldChannel !== newChannel && newChannel !== null) {
+		const sound = getEntranceSound(guild.id, user.id, {})
 		await joinVoice(newChannel);
 		console.log("Joining User:", user.username, user.id);
-		playSound(user.id);
+		playSound(sound);
 	}
 
 	// User leaves a channel
