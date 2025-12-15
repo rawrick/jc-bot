@@ -3,7 +3,7 @@ const fs = require('fs');
 
 // 
 const { getEntranceSound } = require("./helpers/entranceLoader");
-const {printJoinSoundTable} = require("./helpers/IDLogs");
+const { printJoinSoundTable } = require("./helpers/IDLog");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
