@@ -1,10 +1,9 @@
 {
   "dependencies": {
-    "@discordjs/voice": "^0.19.0",
-    "@snazzah/davey": "^0.1.8",
-    "discord.js": "^14.25.1",
-    "dotenv": "^17.2.3",
-    "ffmpeg-static": "^5.3.0",
+    "@discordjs/voice": "^0.19.x",
+    "discord.js": "^14.x",
+    "dotenv": "^17.x",
+    "ffmpeg-static": "^5.x",
     "opusscript": "^0.0.8"
   },
   "name": "jc-bot",
