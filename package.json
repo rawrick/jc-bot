@@ -2,6 +2,7 @@
   "dependencies": {
     "@discordjs/voice": "^0.19.x",
     "discord.js": "^14.x",
+    "@snazzah/davey": "^0.1.8",
     "dotenv": "^17.x",
     "ffmpeg-static": "^5.x",
     "opusscript": "^0.0.8"
