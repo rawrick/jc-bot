@@ -3,7 +3,7 @@ require("dotenv").config();
 // 
 const { playSound, joinVoice, playRandomSound } = require("./helpers/voiceManager");
 const { getEntranceSound, handleEntranceCommand } = require("./helpers/entranceManager");
-const { getServerMembers, getServerInfo } = require("./helpers/infoManager");
+const { getServerMembers, getServerInfo, getSoundlist } = require("./helpers/infoManager");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
@@ -104,6 +104,10 @@ client.on(Events.MessageCreate, async (message) => {
 			break;
 		case "serverinfo":
 			getServerInfo(message);
+			break;
+		// Soundlist Command
+		case "soundlist":
+			await getSoundlist(message);
 			break;
 		// Entrance Command
 		case "entrance":
