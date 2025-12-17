@@ -13,7 +13,6 @@ const voiceStates = new Map();
 
 const sound_dir = process.env.SOUND_DIR;
 const audio_format = process.env.AUDIO_FORMAT || "mp3";
-const ALONE_GRACE_MS = 30_000; // 30 seconds (adjust as needed)
 
 /**
  * Get or create voice state for a guild
@@ -125,52 +124,9 @@ function cleanupGuildVoice(guildId) {
     voiceStates.delete(guildId);
 }
 
-function isBotAlone(channel, clientUserId) {
-    return channel.members.every(
-        m => m.user.bot || m.user.id === clientUserId
-    );
-}
-
-function cancelAloneTimer(guildId) {
-    const state = voiceStates.get(guildId);
-    if (state?.aloneTimer) {
-        clearTimeout(state.aloneTimer);
-        state.aloneTimer = null;
-    }
-}
-
-function handleAloneState(channel, client) {
-    const guildId = channel.guild.id;
-    const state = voiceStates.get(guildId);
-    if (!state || state.aloneTimer) return;
-
-    state.aloneTimer = setTimeout(async () => {
-        state.aloneTimer = null;
-
-        // Channel may no longer exist
-        if (!state.connection || !channel.guild) return;
-
-        // Someone rejoined meanwhile?
-        if (!isBotAlone(channel, client.user.id)) return;
-
-        const afkChannel = channel.guild.afkChannel;
-
-        if (afkChannel) {
-            console.log(`[VOICE] Moving to AFK channel (${afkChannel.name})`);
-            await joinVoice(afkChannel);
-        } else {
-            console.log("[VOICE] No AFK channel — disconnecting");
-            cleanupGuildVoice(guildId);
-        }
-    }, ALONE_GRACE_MS);
-}
-
 module.exports = {
     joinVoice,
     playSound,
     playRandomSound,
-    cleanupGuildVoice,
-    handleAloneState,
-    isBotAlone,
-    cancelAloneTimer
+    cleanupGuildVoice
 };
