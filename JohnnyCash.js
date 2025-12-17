@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 // 
-const { playSound, joinVoice, playRandomSound } = require("./helpers/voiceManager");
+const { playSound, joinVoice, playRandomSound, handleAloneState, isBotAlone, cancelAloneTimer } = require("./helpers/voiceManager");
 const { getEntranceSound, handleEntranceCommand } = require("./helpers/entranceManager");
 const { getServerMembers, getServerInfo, getSoundlist } = require("./helpers/infoManager");
 
@@ -66,6 +66,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 		const sound = getEntranceSound(guild.id, user.id, { defaultSound: user_join_default })
 		await joinVoice(newChannel);
 		console.log("Joining User:", user.username, user.id);
+		cancelAloneTimer(guild.id);
 		playSound(guild.id, sound);
 	}
 
@@ -74,6 +75,9 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 		await joinVoice(oldChannel);
 		console.log("User left:", user.username, user.id);
 		playSound(guild.id, user_leave);
+		if (isBotAlone(oldChannel, client.user.id)) {
+			handleAloneState(oldChannel, client);
+		}
 	}
 });
 
