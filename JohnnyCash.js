@@ -115,7 +115,7 @@ client.on(Events.MessageCreate, async (message) => {
 			break;
 		// Random Sound Command
 		case "random":
-			playRandomSound();
+			playRandomSound(guildId);
 			break;
 		// Start random Playback
 		case "rstart":

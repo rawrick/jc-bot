@@ -100,14 +100,14 @@ function playSound(guildId, filename) {
 /**
  * Function to play a random sound
  */
-function playRandomSound() {
+function playRandomSound(guildId) {
     // List all sound files
     const files = fs.readdirSync(sound_dir).filter(f => f.endsWith(audio_format));
     if (files.length === 0) return;
     // Select a random file
     const randomFile = files[Math.floor(Math.random() * files.length)];
     console.log("Selected random sound file:", randomFile);;
-    playSound(randomFile);
+    playSound(guildId, randomFile);
 };
 
 /**
