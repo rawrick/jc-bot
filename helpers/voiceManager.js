@@ -1,5 +1,5 @@
 require("dotenv").config();
-const fs = require('fs');
+const fs = require("fs");
 
 const {
     joinVoiceChannel,
@@ -13,7 +13,7 @@ const voiceStates = new Map();
 
 const sound_dir = process.env.SOUND_DIR;
 const audio_format = process.env.AUDIO_FORMAT || "mp3";
-const ALONE_GRACE_MS = 30_000; // 30 seconds (adjust as needed)
+const ALONE_GRACE_MS = 30_000;
 
 /**
  * Get or create voice state for a guild
@@ -23,7 +23,9 @@ function getGuildVoice(guildId) {
         voiceStates.set(guildId, {
             connection: null,
             player: createAudioPlayer(),
-            channelId: null
+            channelId: null,
+            aloneTimer: null,
+            moving: false
         });
     }
     return voiceStates.get(guildId);
@@ -40,11 +42,14 @@ async function joinVoice(channel) {
         return state;
     }
 
-    // Cleanup old connection
+    state.moving = true;
+    cancelAloneTimer(guildId);
+
+    // Destroy old connection AFTER marking move
     if (state.connection) {
         try {
             state.connection.destroy();
-        } catch { }
+        } catch {}
     }
 
     const connection = joinVoiceChannel({
@@ -58,16 +63,26 @@ async function joinVoice(channel) {
     state.connection = connection;
     state.channelId = channel.id;
 
-    // Reconnect handling (safe)
     connection.on(VoiceConnectionStatus.Disconnected, async () => {
+        if (state.moving) {
+            console.log("[VOICE] Disconnected during intentional move");
+            return;
+        }
+
         try {
             await Promise.race([
                 entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
                 entersState(connection, VoiceConnectionStatus.Connecting, 5_000)
             ]);
         } catch {
+            console.warn("[VOICE] Reconnect failed, cleaning up");
             cleanupGuildVoice(guildId);
         }
+    });
+
+    // Clear moving flag once connected
+    connection.once(VoiceConnectionStatus.Ready, () => {
+        state.moving = false;
     });
 
     return state;
@@ -83,11 +98,8 @@ function playSound(guildId, filename) {
     if (!filename.endsWith("." + audio_format)) {
         filename += "." + audio_format;
     }
-    // Construct full path
-    let fullPath = sound_dir;
-    fullPath += filename;
 
-    // Check if file exists
+    const fullPath = sound_dir + filename;
     if (!fs.existsSync(fullPath)) {
         console.log("File does not exist:", filename);
         return;
@@ -99,38 +111,33 @@ function playSound(guildId, filename) {
 }
 
 /**
- * Function to play a random sound
- */
-function playRandomSound() {
-    // List all sound files
-    const files = fs.readdirSync(sound_dir).filter(f => f.endsWith(audio_format));
-    if (files.length === 0) return;
-    // Select a random file
-    const randomFile = files[Math.floor(Math.random() * files.length)];
-    console.log("Selected random sound file:", randomFile);;
-    playSound(randomFile);
-};
-
-/**
  * Cleanup when voice is lost
  */
 function cleanupGuildVoice(guildId) {
     const state = voiceStates.get(guildId);
     if (!state) return;
 
+    cancelAloneTimer(guildId);
+
     try {
         state.connection?.destroy();
-    } catch { }
+    } catch {}
 
     voiceStates.delete(guildId);
 }
 
+/**
+ * Check if bot is alone
+ */
 function isBotAlone(channel, clientUserId) {
     return channel.members.every(
         m => m.user.bot || m.user.id === clientUserId
     );
 }
 
+/**
+ * Cancel AFK timer
+ */
 function cancelAloneTimer(guildId) {
     const state = voiceStates.get(guildId);
     if (state?.aloneTimer) {
@@ -139,6 +146,9 @@ function cancelAloneTimer(guildId) {
     }
 }
 
+/**
+ * Handle alone state
+ */
 function handleAloneState(channel, client) {
     const guildId = channel.guild.id;
     const state = voiceStates.get(guildId);
@@ -147,15 +157,12 @@ function handleAloneState(channel, client) {
     state.aloneTimer = setTimeout(async () => {
         state.aloneTimer = null;
 
-        // Channel may no longer exist
-        if (!state.connection || !channel.guild) return;
-
-        // Someone rejoined meanwhile?
+        if (!state.connection) return;
         if (!isBotAlone(channel, client.user.id)) return;
 
         const afkChannel = channel.guild.afkChannel;
 
-        if (afkChannel) {
+        if (afkChannel && afkChannel.joinable) {
             console.log(`[VOICE] Moving to AFK channel (${afkChannel.name})`);
             await joinVoice(afkChannel);
         } else {
@@ -168,7 +175,6 @@ function handleAloneState(channel, client) {
 module.exports = {
     joinVoice,
     playSound,
-    playRandomSound,
     cleanupGuildVoice,
     handleAloneState,
     isBotAlone,
