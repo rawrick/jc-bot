@@ -12,6 +12,7 @@
   "description": "",
   "main": "src/JohnnyCash.js",
   "scripts": {
+    "start": "node src/JohnnyCash.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
