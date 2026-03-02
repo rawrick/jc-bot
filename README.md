@@ -2,6 +2,29 @@
 
 ## How to install
 
+### Docker (recommended)
+
+Docker Compose:
+
+    services:
+      jc-bot:
+        image: ballapatrick/jc-bot:latest
+        container_name: jc-bot
+        restart: no
+        working_dir: /app
+        env_file:
+          - /config/.env
+        environment:
+          - NODE_ENV=production
+        volumes:
+          - jcbot_data:/app/config:rw
+        network_mode: bridge
+  
+    volumes:
+      jcbot_data:
+        name: jcbot_data
+
+
 ### Debian
 
     sudo apt update && sudo apt upgrade -y
