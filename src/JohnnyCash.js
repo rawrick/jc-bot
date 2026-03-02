@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+const path = require("path");
+
 // 
 const { playSound, joinVoice, playRandomSound } = require("./helpers/voiceManager");
 const { getEntranceSound, handleEntranceCommand } = require("./helpers/entranceManager");
@@ -7,7 +9,9 @@ const { getServerMembers, getServerInfo, getSoundlist } = require("./helpers/inf
 
 // Child process for random sound playing
 const { fork } = require("child_process");
-const child = fork("./helpers/randomStartStop.js");
+const child = fork(
+	path.join(__dirname, "helpers", "randomStartStop.js")
+);
 
 // Discord.js imports
 const { Client, GatewayIntentBits, Events } = require("discord.js");
