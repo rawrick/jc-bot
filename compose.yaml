@@ -6,7 +6,9 @@ services:
 
     container_name: jc-bot
 
-    restart: unless-stopped
+    restart: no
+
+    working_dir: /app
 
     environment:
       - NODE_ENV=production
