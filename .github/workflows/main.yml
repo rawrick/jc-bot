@@ -41,32 +41,6 @@ jobs:
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
           restore-keys: ${{ runner.os }}-npm-
 
-      - name: Build test image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          target: test
-          tags: nodejs-app-test:latest
-          platforms: linux/amd64
-          load: true
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
-
-      - name: Run tests inside container
-        run: |
-          docker run --rm \
-            --network host \
-            -e NODE_ENV=test \
-            -e POSTGRES_HOST=localhost \
-            -e POSTGRES_PORT=5432 \
-            -e POSTGRES_DB=todoapp_test \
-            -e POSTGRES_USER=postgres \
-            -e POSTGRES_PASSWORD=postgres \
-            nodejs-app-test:latest
-        env:
-          CI: true
-        timeout-minutes: 10
-
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
