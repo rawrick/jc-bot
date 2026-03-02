@@ -10,12 +10,18 @@ services:
 
     working_dir: /app
 
+    env_file:
+      - /config/.env
+
     environment:
       - NODE_ENV=production
 
     volumes:
-      - /srv/ssd/containers/jc-bot_data:/app/data
-      - /srv/ssd/containers/jc-bot_data/.env:/app/.env:ro
+      - jcbot_data:/app/config:rw
 
     # If your bot needs network access:
     network_mode: bridge
+
+volumes:
+  jcbot_data:
+    name: jcbot_data

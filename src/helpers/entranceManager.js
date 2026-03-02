@@ -4,7 +4,8 @@ const path = require("path");
 
 const CACHE = new Map();
 
-const MAP_DIR = "./config/entranceMaps";
+const MAP_DIR = path.join(__dirname, "..", "..", "config", "entranceMaps");
+
 
 
 function getGuildMapPath(guildId, baseDir = MAP_DIR) {
