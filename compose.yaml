@@ -12,8 +12,8 @@ services:
       - NODE_ENV=production
 
     volumes:
-      - ./logs:/app/logs
-      - ./.env:/app/.env:ro
+      - /srv/ssd/containers/jc-bot_data:/app/data
+      - /srv/ssd/containers/jc-bot_data/.env:/app/.env:ro
 
     # If your bot needs network access:
     network_mode: bridge
