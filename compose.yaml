@@ -1,27 +1,13 @@
 services:
   jc-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-
     container_name: jc-bot
-
-    restart: no
-
+    build: .
+    restart: unless-stopped
     working_dir: /app
-
+    volumes:
+      - ./jc-bot_data/config:/config:rw
+      - ./jc-bot_data/data:/data:ro
     env_file:
-      - /config/.env
-
+      - ./jc-bot_data/config/.env
     environment:
       - NODE_ENV=production
-
-    volumes:
-      - jcbot_data:/app/config:rw
-
-    # If your bot needs network access:
-    network_mode: bridge
-
-volumes:
-  jcbot_data:
-    name: jcbot_data

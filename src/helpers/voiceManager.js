@@ -1,5 +1,6 @@
 require("dotenv").config();
 const fs = require('fs');
+const path = require("path");
 
 const {
     joinVoiceChannel,
@@ -11,7 +12,7 @@ const {
 
 const voiceStates = new Map();
 
-const sound_dir = process.env.SOUND_DIR;
+const sound_dir = path.join("/data", "soundboard");
 const audio_format = process.env.AUDIO_FORMAT || "mp3";
 
 /**
@@ -84,11 +85,11 @@ function playSound(guildId, filename) {
     }
     // Construct full path
     let fullPath = sound_dir;
-    fullPath += filename;
+    fullPath = path.join(fullPath, filename);
 
     // Check if file exists
     if (!fs.existsSync(fullPath)) {
-        console.log("File does not exist:", filename);
+        console.log("File does not exist:", fullPath);
         return;
     }
 

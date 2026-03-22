@@ -110,7 +110,7 @@ async function getServerInfo(message) {
 }
 
 async function getSoundlist(message) {
-    const soundDir = process.env.SOUND_DIR;
+    const soundDir = path.join("/data", "soundboard");
 
     if (!fs.existsSync(soundDir)) {
         await message.reply("❌ Sound directory does not exist.");

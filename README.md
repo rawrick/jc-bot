@@ -1,83 +1,28 @@
 # Discord Soundboard Bot
-
-## How to install
-
-### Docker (recommended)
-
-Docker Compose:
-
-    services:
-      jc-bot:
-        image: ballapatrick/jc-bot:latest
-        container_name: jc-bot
-        restart: no
-        working_dir: /app
-        env_file:
-          - /config/.env
-        environment:
-          - NODE_ENV=production
-        volumes:
-          - jcbot_data:/app/config:rw
-        network_mode: bridge
-  
+## Installation (Docker)
+### Docker Compose:
+```yaml
+services:
+  jc-bot:
+    container_name: jc-bot
+    build: .
+    restart: unless-stopped
+    working_dir: /app
     volumes:
-      jcbot_data:
-        name: jcbot_data
-
-
-### Debian
-
-    sudo apt update && sudo apt upgrade -y
-    sudo apt install -y git curl build-essential ffmpeg
-
-Install Node.js
-
-    curl -fsSL https://raw.githubusercontent.com/mklement0/n-install/stable/bin/n-install | bash -s 22
-
-Clone this repository
-
-    cd ~
-    git clone https://github.com/rawrick/jc-bot.git jc-bot
-    cd jc-bot
-
-Install Node.js packages
-
-    npm install
-
-Configure enviornment variables
-
-    nano .env
-
-Add
-
-    TOKEN=YOUR_DISCORD_BOT_TOKEN
-    SOUND_DIR=/home/pi/jc-bot/soundboard/
-    PREFIX=?
-
-Run the bot
-
-    node JohnnyCash.js
-
-## Windows
-
-1. Install [Node.js](https://nodejs.org/en/download) v22.21.1 (LTS)
-
-2. Clone this repository [jc-bot](https://github.com/rawrick/jc-bot)
-
-3. In your shell navigate to the project folder and install dependencies with
-
-    npm install
-
-5. Create a sound file folder 
-
-4. Create a file ".env"
-
-    TOKEN=YOUR_DISCORD_BOT_TOKEN
-    SOUND_DIR=/PATH/TO/SOUNDFILES
-    PREFIX=CUSTOM_PREFIX
-
-5. Run the bot
-
-    node JohnnyCash.js
-
-
+      - ./jc-bot_data/config:/config:rw
+      - ./jc-bot_data/data:/data:ro
+    env_file:
+      - /config/.env
+    environment:
+      - NODE_ENV=production
+```
+### Configuration
+Create a .env inside `./jc-bot_data/config`:
+```env
+# required
+TOKEN=YOURAPIKEY
+# optional
+PREFIX=?
+USER_JOIN_DEFAULT=join
+USER_LEAVE=leave
+```

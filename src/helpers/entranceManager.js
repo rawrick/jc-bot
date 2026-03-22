@@ -4,7 +4,7 @@ const path = require("path");
 
 const CACHE = new Map();
 
-const MAP_DIR = path.join(__dirname, "..", "..", "config", "entranceMaps");
+const MAP_DIR = path.join("/config", "entranceMaps");
 
 
 
@@ -85,8 +85,8 @@ function getEntranceSound(guildId, userId, options = {}) {
  */
 async function handleEntranceCommand(message, options = {}) {
     const {
-        soundDir = "./soundboard",
-        mapsDir = "./config/entranceMaps",
+        soundDir = path.join("/data", "soundboard"),
+        mapsDir = path.join("/config", "entranceMaps"),
         audioFormat = "mp3"
     } = options;
 

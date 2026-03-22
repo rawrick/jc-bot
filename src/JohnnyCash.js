@@ -16,9 +16,9 @@ const { Client, GatewayIntentBits, Events } = require("discord.js");
 
 // Config Environment Variables
 const token = process.env.TOKEN;
-const prefix = process.env.PREFIX;
-const user_join_default = process.env.USER_JOIN_DEFAULT || "sus3";
-const user_leave = process.env.USER_LEAVE || "rave";
+const prefix = process.env.PREFIX || "?";
+const user_join_default = process.env.USER_JOIN_DEFAULT || "join";
+const user_leave = process.env.USER_LEAVE || "leave";
 
 // Create Discord Client
 const client = new Client({
