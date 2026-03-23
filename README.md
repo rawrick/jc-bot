@@ -23,6 +23,7 @@ Create a .env inside `./jc-bot_data/config`:
 TOKEN=YOURAPIKEY
 # optional
 PREFIX=?
+AFK_GRACE_PERIOD=30
 USER_JOIN_DEFAULT=join
-USER_LEAVE=leave
+USER_LEAVE_DEFAULT=leave
 ```

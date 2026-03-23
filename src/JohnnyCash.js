@@ -13,11 +13,7 @@ const child = fork(path.join(__dirname, "helpers", "randomScheduler.js"));
 // Discord.js imports
 const { Client, GatewayIntentBits, Events } = require("discord.js");
 
-// Config Environment Variables
-const token = process.env.TOKEN;
-const prefix = process.env.PREFIX || "?";
-const user_join_default = process.env.USER_JOIN_DEFAULT || "join";
-const user_leave = process.env.USER_LEAVE || "leave";
+const { TOKEN, PREFIX, USER_JOIN_DEFAULT, USER_LEAVE_DEFAULT } = require("./helpers/config");
 
 // Create Discord Client
 const client = new Client({
@@ -64,7 +60,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 
 	// User joins a channel
 	if (oldChannel !== newChannel && newChannel !== null) {
-		const sound = getEntranceSound(guild.id, user.id, { defaultSound: user_join_default })
+		const sound = getEntranceSound(guild.id, user.id, { defaultSound: USER_JOIN_DEFAULT })
 		await joinVoice(newChannel);
 		console.log("Joining User:", user.username, user.id);
 		playSound(guild.id, sound);
@@ -74,7 +70,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 	if (newChannel === null) {
 		await joinVoice(oldChannel);
 		console.log("User left:", user.username, user.id);
-		playSound(guild.id, user_leave);
+		playSound(guild.id, getEntranceSound(guild.id, user.id, { defaultSound: USER_LEAVE_DEFAULT }));
 		checkAndScheduleAfk(guild);
 	}
 });
@@ -84,12 +80,12 @@ client.on(Events.MessageCreate, async (message) => {
 	// Ignore bot messages
 	if (message.author.bot) return;
 	// Ignore messages without prefix
-	if (!message.content.startsWith(prefix)) return;
+	if (!message.content.startsWith(PREFIX)) return;
 
 	const guildId = message.guild.id;
 
 	const text = message.content;
-	const command = text.slice(prefix.length).trim().split(/\s+/).shift().toLowerCase();
+	const command = text.slice(PREFIX.length).trim().split(/\s+/).shift().toLowerCase();
 
 	// Join VC of message author
 	if (message.member.voice.channel) {
@@ -130,4 +126,4 @@ client.on(Events.MessageCreate, async (message) => {
 	}
 });
 
-client.login(token);
+client.login(TOKEN);
