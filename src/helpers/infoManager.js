@@ -8,6 +8,8 @@ const {
     ComponentType
 } = require("discord.js");
 
+const { SOUND_DIR } = require("./config");
+
 /**
  * Cache structure:
  * guildId => {
@@ -18,7 +20,7 @@ const {
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const PAGE_SIZE = 20;
-const TIMEOUT = 180_000; // 3 minute
+const TIMEOUT = 180_000; // 3 minutes
 const AUDIO_REGEX = /\.(mp3|wav|ogg|opus)$/i;
 
 /**
@@ -99,7 +101,7 @@ async function getServerMembers(message) {
         await message.channel.send("```" + chunk + "```");
     }
 
-    await statusMsg.edit("✅ Done.", guild.id);
+    await statusMsg.edit("✅ Done.");
 }
 
 async function getServerInfo(message) {
@@ -110,7 +112,7 @@ async function getServerInfo(message) {
 }
 
 async function getSoundlist(message) {
-    const soundDir = path.join("/data", "soundboard");
+    const soundDir = SOUND_DIR;
 
     if (!fs.existsSync(soundDir)) {
         await message.reply("❌ Sound directory does not exist.");

@@ -2,14 +2,13 @@ require("dotenv").config();
 
 const path = require("path");
 
-// 
-const { playSound, joinVoice, playRandomSound } = require(path.join(__dirname, "helpers", "voiceManager.js"));
-const { getEntranceSound, handleEntranceCommand } = require(path.join(__dirname, "helpers", "entranceManager.js"));
-const { getServerMembers, getServerInfo, getSoundlist } = require(path.join(__dirname, "helpers", "infoManager.js"));
+const { playSound, joinVoice, playRandomSound } = require("./helpers/voiceManager");
+const { getEntranceSound, handleEntranceCommand } = require("./helpers/entranceManager");
+const { getServerMembers, getServerInfo, getSoundlist } = require("./helpers/infoManager");
 
 // Child process for random sound playing
 const { fork } = require("child_process");
-const child = fork(	path.join(__dirname, "helpers", "randomStartStop.js"));
+const child = fork(path.join(__dirname, "helpers", "randomScheduler.js"));
 
 // Discord.js imports
 const { Client, GatewayIntentBits, Events } = require("discord.js");
@@ -97,10 +96,6 @@ client.on(Events.MessageCreate, async (message) => {
 	}
 
 	switch (command) {
-		// Play matching sound file
-		default:
-			playSound(guildId, command);
-			break;
 		case "members":
 			getServerMembers(message);
 			break;
@@ -117,7 +112,7 @@ client.on(Events.MessageCreate, async (message) => {
 			break;
 		// Random Sound Command
 		case "random":
-			playRandomSound();
+			playRandomSound(guildId);
 			break;
 		// Start random Playback
 		case "rstart":
@@ -126,6 +121,10 @@ client.on(Events.MessageCreate, async (message) => {
 		// Stop random Playback
 		case "rstop":
 			child.send("stop");
+			break;
+		// Play matching sound file
+		default:
+			playSound(guildId, command);
 			break;
 	}
 });

@@ -1,25 +1,22 @@
 const fs = require("fs");
-const { get } = require("http");
 const path = require("path");
+
+const { SOUND_DIR, MAPS_DIR, AUDIO_FORMAT } = require("./config");
 
 const CACHE = new Map();
 
-const MAP_DIR = path.join("/config", "entranceMaps");
-
-
-
-function getGuildMapPath(guildId, baseDir = MAP_DIR) {
-    if (!fs.existsSync(baseDir)) {
-        fs.mkdirSync(baseDir, { recursive: true });
+function getGuildMapPath(guildId) {
+    if (!fs.existsSync(MAPS_DIR)) {
+        fs.mkdirSync(MAPS_DIR, { recursive: true });
     }
-    return path.join(baseDir, `${guildId}.json`);
+    return path.join(MAPS_DIR, `${guildId}.json`);
 }
 
 /**
  * Load a guild entrance map into cache
  */
-function loadGuildMap(guildId, baseDir = MAP_DIR) {
-    const file = getGuildMapPath(guildId, baseDir);
+function loadGuildMap(guildId) {
+    const file = getGuildMapPath(guildId);
 
     if (!fs.existsSync(file)) {
         CACHE.set(guildId, {});
@@ -32,19 +29,21 @@ function loadGuildMap(guildId, baseDir = MAP_DIR) {
 }
 
 /**
- * Optional hot-reload (future command support)
+ * Save a guild entrance map to disk and refresh cache
  */
-function reloadGuildMap(guildId, mapsDir = MAP_DIR) {
+function saveAndReloadMap(guildId, data) {
+    const file = getGuildMapPath(guildId);
+    fs.writeFileSync(file, JSON.stringify(data, null, 2));
     CACHE.delete(guildId);
-    return loadGuildMap(guildId, mapsDir);
+    return loadGuildMap(guildId);
 }
 
 /**
- * Save a guild entrance map to disk
+ * Optional hot-reload (future command support)
  */
-function saveGuildMap(guildId, data, baseDir) {
-    const file = getGuildMapPath(guildId, baseDir);
-    fs.writeFileSync(file, JSON.stringify(data, null, 2));
+function reloadGuildMap(guildId) {
+    CACHE.delete(guildId);
+    return loadGuildMap(guildId);
 }
 
 /**
@@ -59,19 +58,16 @@ function pickRandom(arr) {
  * @returns {string|null}
  */
 function getEntranceSound(guildId, userId, options = {}) {
-    const {
-        mapsDir = MAP_DIR,
-        defaultSound = null
-    } = options;
+    const { defaultSound = null } = options;
 
     let map = CACHE.get(guildId);
     if (!map) {
-        map = loadGuildMap(guildId, mapsDir);
+        map = loadGuildMap(guildId);
     }
 
     const entry = map[userId];
     if (!entry || !Array.isArray(entry.sounds) || entry.sounds.length === 0) {
-        console.log(`User with ID ${userId} not found.`)
+        console.log(`User with ID ${userId} not found.`);
         return defaultSound;
     }
 
@@ -79,17 +75,12 @@ function getEntranceSound(guildId, userId, options = {}) {
 }
 
 /**
- * ?entrance add @user sound.mp3
- * ?entrance remove @user sound.mp3
+ * ?entrance add @user sound
+ * ?entrance remove @user sound
  * ?entrance clear @user
+ * ?entrance list @user
  */
-async function handleEntranceCommand(message, options = {}) {
-    const {
-        soundDir = path.join("/data", "soundboard"),
-        mapsDir = path.join("/config", "entranceMaps"),
-        audioFormat = "mp3"
-    } = options;
-
+async function handleEntranceCommand(message) {
     const parts = message.content.trim().split(/\s+/);
     if (parts.length < 3) {
         await message.reply("❌ Please mention a user or provide a user ID.");
@@ -112,7 +103,10 @@ async function handleEntranceCommand(message, options = {}) {
     const guildId = message.guild.id;
     const userId = user.id;
 
-    const map = loadGuildMap(guildId, mapsDir);
+    let map = CACHE.get(guildId);
+    if (!map) {
+        map = loadGuildMap(guildId);
+    }
 
     if (!map[userId]) {
         map[userId] = {
@@ -123,7 +117,7 @@ async function handleEntranceCommand(message, options = {}) {
 
     // ?entrance list @user
     if (action === "list") {
-        const entry = map[user.id];
+        const entry = map[userId];
         if (!entry || !entry.sounds || entry.sounds.length === 0) {
             await message.reply(`⚠️ No entrance sounds assigned for **${user.username}**.`);
             return;
@@ -138,8 +132,7 @@ async function handleEntranceCommand(message, options = {}) {
     // ?entrance clear @user
     if (action === "clear") {
         map[userId].sounds = [];
-        saveGuildMap(guildId, map, mapsDir);
-        reloadGuildMap(guildId, mapsDir);
+        saveAndReloadMap(guildId, map);
         await message.reply(`✅ Cleared entrance sounds for **${user.username}**`);
         return;
     }
@@ -150,8 +143,8 @@ async function handleEntranceCommand(message, options = {}) {
         return;
     }
 
-    const soundFile = parts[3] + `.${audioFormat}`;
-    const soundPath = path.join(soundDir, soundFile);
+    const soundFile = `${parts[3]}.${AUDIO_FORMAT}`;
+    const soundPath = path.join(SOUND_DIR, soundFile);
 
     if (!fs.existsSync(soundPath)) {
         await message.reply(`❌ Sound file not found: \`${soundFile}\``);
@@ -160,7 +153,7 @@ async function handleEntranceCommand(message, options = {}) {
 
     const sounds = map[userId].sounds;
 
-    // ?entrance add @user sound.mp3
+    // ?entrance add @user sound
     if (action === "add") {
         if (sounds.includes(soundFile)) {
             await message.reply("⚠️ This sound is already assigned to this user.");
@@ -168,16 +161,12 @@ async function handleEntranceCommand(message, options = {}) {
         }
 
         sounds.push(soundFile);
-        saveGuildMap(guildId, map, mapsDir);
-        reloadGuildMap(guildId, mapsDir);
-
-        await message.reply(
-            `✅ Added entrance sound \`${soundFile}\` to **${user.username}**`
-        );
+        saveAndReloadMap(guildId, map);
+        await message.reply(`✅ Added entrance sound \`${soundFile}\` to **${user.username}**`);
         return;
     }
 
-    // ?entrance remove @user sound.mp3
+    // ?entrance remove @user sound
     if (action === "remove") {
         const index = sounds.indexOf(soundFile);
         if (index === -1) {
@@ -186,12 +175,8 @@ async function handleEntranceCommand(message, options = {}) {
         }
 
         sounds.splice(index, 1);
-        saveGuildMap(guildId, map, mapsDir);
-        reloadGuildMap(guildId, mapsDir);
-
-        await message.reply(
-            `✅ Removed entrance sound \`${soundFile}\` from **${user.username}**`
-        );
+        saveAndReloadMap(guildId, map);
+        await message.reply(`✅ Removed entrance sound \`${soundFile}\` from **${user.username}**`);
         return;
     }
 

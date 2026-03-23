@@ -1,5 +1,4 @@
-require("dotenv").config();
-const fs = require('fs');
+const fs = require("fs");
 const path = require("path");
 
 const {
@@ -10,10 +9,9 @@ const {
     entersState
 } = require("@discordjs/voice");
 
-const voiceStates = new Map();
+const { SOUND_DIR, AUDIO_FORMAT } = require("./config");
 
-const sound_dir = path.join("/data", "soundboard");
-const audio_format = process.env.AUDIO_FORMAT || "mp3";
+const voiceStates = new Map();
 
 /**
  * Get or create voice state for a guild
@@ -80,12 +78,10 @@ function playSound(guildId, filename) {
     const state = voiceStates.get(guildId);
     if (!state || !state.connection) return;
 
-    if (!filename.endsWith("." + audio_format)) {
-        filename += "." + audio_format;
+    if (!filename.endsWith("." + AUDIO_FORMAT)) {
+        filename += "." + AUDIO_FORMAT;
     }
-    // Construct full path
-    let fullPath = sound_dir;
-    fullPath = path.join(fullPath, filename);
+    const fullPath = path.join(SOUND_DIR, filename);
 
     // Check if file exists
     if (!fs.existsSync(fullPath)) {
@@ -99,17 +95,24 @@ function playSound(guildId, filename) {
 }
 
 /**
- * Function to play a random sound
+ * Play a random sound.
+ * If guildId is provided, plays in that guild only.
+ * Otherwise plays in all active voice connections.
  */
-function playRandomSound() {
-    // List all sound files
-    const files = fs.readdirSync(sound_dir).filter(f => f.endsWith(audio_format));
+function playRandomSound(guildId = null) {
+    const files = fs.readdirSync(SOUND_DIR).filter(f => f.endsWith("." + AUDIO_FORMAT));
     if (files.length === 0) return;
-    // Select a random file
     const randomFile = files[Math.floor(Math.random() * files.length)];
-    console.log("Selected random sound file:", randomFile);;
-    playSound(randomFile);
-};
+    console.log("Selected random sound file:", randomFile);
+
+    if (guildId) {
+        playSound(guildId, randomFile);
+    } else {
+        for (const id of voiceStates.keys()) {
+            playSound(id, randomFile);
+        }
+    }
+}
 
 /**
  * Cleanup when voice is lost
