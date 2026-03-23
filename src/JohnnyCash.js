@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const path = require("path");
 
-const { playSound, joinVoice, playRandomSound } = require("./helpers/voiceManager");
+const { playSound, joinVoice, playRandomSound, checkAndScheduleAfk } = require("./helpers/voiceManager");
 const { getEntranceSound, handleEntranceCommand } = require("./helpers/entranceManager");
 const { getServerMembers, getServerInfo, getSoundlist } = require("./helpers/infoManager");
 
@@ -75,6 +75,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 		await joinVoice(oldChannel);
 		console.log("User left:", user.username, user.id);
 		playSound(guild.id, user_leave);
+		checkAndScheduleAfk(guild);
 	}
 });
 

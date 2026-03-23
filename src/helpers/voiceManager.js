@@ -9,9 +9,10 @@ const {
     entersState
 } = require("@discordjs/voice");
 
-const { SOUND_DIR, AUDIO_FORMAT } = require("./config");
+const { SOUND_DIR, AUDIO_FORMAT, AFK_GRACE_MS } = require("./config");
 
 const voiceStates = new Map();
+const afkTimers = new Map();
 
 /**
  * Get or create voice state for a guild
@@ -33,6 +34,9 @@ function getGuildVoice(guildId) {
 async function joinVoice(channel) {
     const guildId = channel.guild.id;
     const state = getGuildVoice(guildId);
+
+    // Cancel any pending AFK move since someone is (re)joining
+    cancelAfkTimer(guildId);
 
     if (state.connection && state.channelId === channel.id) {
         return state;
@@ -115,6 +119,59 @@ function playRandomSound(guildId = null) {
 }
 
 /**
+ * Cancel a pending AFK move for a guild
+ */
+function cancelAfkTimer(guildId) {
+    const timer = afkTimers.get(guildId);
+    if (timer) {
+        clearTimeout(timer);
+        afkTimers.delete(guildId);
+        console.log(`[${guildId}] AFK move cancelled.`);
+    }
+}
+
+/**
+ * Check if the bot's current channel is empty and schedule a move to the
+ * guild's AFK channel after AFK_GRACE_MS if no one rejoins.
+ */
+function checkAndScheduleAfk(guild) {
+    const state = voiceStates.get(guild.id);
+    if (!state || !state.connection || !state.channelId) return;
+
+    const channel = guild.channels.cache.get(state.channelId);
+    if (!channel) return;
+
+    // Someone is still in the channel — nothing to do
+    if (channel.members.some(m => !m.user.bot)) return;
+
+    // Clear any existing timer before setting a new one
+    cancelAfkTimer(guild.id);
+
+    console.log(`[${guild.name}] Voice channel empty — moving to AFK in ${AFK_GRACE_MS / 1000}s`);
+
+    const timer = setTimeout(async () => {
+        afkTimers.delete(guild.id);
+
+        const afkChannel = guild.afkChannel;
+        if (!afkChannel) {
+            console.log(`[${guild.name}] No AFK channel configured, staying put.`);
+            return;
+        }
+
+        // Re-check: someone may have rejoined during the grace period
+        const currentState = voiceStates.get(guild.id);
+        if (!currentState || !currentState.channelId) return;
+        const currentChannel = guild.channels.cache.get(currentState.channelId);
+        if (currentChannel?.members.some(m => !m.user.bot)) return;
+
+        console.log(`[${guild.name}] Moving to AFK channel: #${afkChannel.name}`);
+        await joinVoice(afkChannel);
+    }, AFK_GRACE_MS);
+
+    afkTimers.set(guild.id, timer);
+}
+
+/**
  * Cleanup when voice is lost
  */
 function cleanupGuildVoice(guildId) {
@@ -132,5 +189,6 @@ module.exports = {
     joinVoice,
     playSound,
     playRandomSound,
-    cleanupGuildVoice
+    cleanupGuildVoice,
+    checkAndScheduleAfk,
 };
